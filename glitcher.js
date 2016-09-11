@@ -271,6 +271,17 @@ window.addEventListener('load', function() {
         }
     }
 
+    var menu = {
+        w: 3.3 * TILE_W,
+        h: 2.3 * TILE_W,
+        render: function(fgCtx, bgCtx) {
+            fgCtx.fillStyle = 'rgba(10, 20, 30, 0.5)';
+            fgCtx.fillRect(CANVAS_W / 2 - this.w / 2,
+                CANVAS_H / 2 - this.h / 2, this.w, this.h);
+            bgCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        }
+    };
+
     var audio = {
         MUTATIONS: 3,
         settings: {
@@ -408,7 +419,7 @@ window.addEventListener('load', function() {
         guy.render(ctx, cam);
 
         if (obstacles.collision(guy)) {
-            alert("GAME OVER!");
+            menu.render(ctxs.ui, ctxs.main);
         } else {
             requestAnimationFrame(mainLoop);
         }
