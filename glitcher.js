@@ -20,8 +20,16 @@ window.addEventListener('load', function() {
         ctxs[name] = canvas.getContext('2d');
     };
 
+    function clearCanvas(ctx) {
+        ctx.save();
+        ctx.resetTransform();
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.restore();
+    }
+
     addCanvas('main', 1);
-    addCanvas('ui', 2);
+    addCanvas('menu', 2)
+    addCanvas('ui', 3);
 
     var ctx = ctxs.main;
     ctx.canvas.style['background'] = '#401910';
@@ -37,12 +45,14 @@ window.addEventListener('load', function() {
         y: -TILE_W / 2,
         V: 64,
         J: 54,
+
         anim: {
             /* should correlate with speed */
             FPS: 64 / 3,
             frames: [],
             t: 0
         },
+
         init: function() {
             var spritesheet = document.getElementById('dark-devil');
             var len = spritesheet.width / TILE_W;
@@ -56,6 +66,7 @@ window.addEventListener('load', function() {
                 this.anim.frames.push(canvas);
             }
         },
+
         render: function(ctx, cam) {
             var x = this.x - cam.x + CANVAS_W / 2 - TILE_W / 2;
             var y = this.y - cam.y + CANVAS_H / 2 - TILE_W / 2;
@@ -64,12 +75,14 @@ window.addEventListener('load', function() {
             var img = this.anim.frames[frame];
             ctx.drawImage(img, x, y);
         },
+
         update: function(dt) {
             this.x += dt * this.V;
 
             this.anim.t += dt;
             this.anim.t %= this.anim.frames.length / this.anim.FPS;
         },
+
         jump: function() {
             var frame = Math.floor(this.anim.t * this.anim.FPS);
             var img = this.anim.frames[frame];
@@ -89,6 +102,7 @@ window.addEventListener('load', function() {
         v: 32,
         x: CANVAS_W / 2 + TILE_W / 2,
         y: TILE_W - CANVAS_H / 2 - OFFSET_Y,
+
         update: function(dt, guy) {
             this.x += this.v * dt;
 
@@ -114,20 +128,7 @@ window.addEventListener('load', function() {
         ceil: [],
         bg: [],
         floor: [],
-        genTiles: function() {
-            this.ceil.push(randomInt(this.ceilImages.length));
-            this.floor.push(randomInt(this.floorImages.length));
-            for (var j = 0; j < SCENE_H - 2; j += 1) {
-                this.bg[j].push(randomInt(this.bgImages.length));
-            }
-        },
-        popTiles: function() {
-            this.ceil.shift();
-            this.floor.shift();
-            for (var j = 0; j < SCENE_H - 2; j += 1) {
-                this.bg[j].shift();
-            }
-        },
+
         init: function() {
             for (var i = 0; i < SCENE_H - 2; i += 1) {
                 this.bg.push([]);
@@ -136,6 +137,23 @@ window.addEventListener('load', function() {
                 this.genTiles();
             }
         },
+
+        genTiles: function() {
+            this.ceil.push(randomInt(this.ceilImages.length));
+            this.floor.push(randomInt(this.floorImages.length));
+            for (var j = 0; j < SCENE_H - 2; j += 1) {
+                this.bg[j].push(randomInt(this.bgImages.length));
+            }
+        },
+
+        popTiles: function() {
+            this.ceil.shift();
+            this.floor.shift();
+            for (var j = 0; j < SCENE_H - 2; j += 1) {
+                this.bg[j].shift();
+            }
+        },
+
         update: function(cam) {
             if (this.x + 32 < cam.x - CANVAS_W / 2) {
                 this.x += 32;
@@ -143,6 +161,7 @@ window.addEventListener('load', function() {
                 this.genTiles();
             }
         },
+
         renderCol: function(ctx, cam, i) {
             var x = this.x + TILE_W * i - cam.x + CANVAS_W / 2;
             ctx.drawImage(this.ceilImages[this.ceil[i]],
@@ -154,6 +173,7 @@ window.addEventListener('load', function() {
                     x, TILE_W * j - OFFSET_Y);
             }
         },
+
         render: function(ctx, cam) {
             for (var i = 0; i < SCENE_W; i += 1) {
                 this.renderCol(ctx, cam, i);
@@ -161,11 +181,14 @@ window.addEventListener('load', function() {
         }
     };
 
+    scene.init();
+
     var obstacles = {
         PROB: 1,
         DIST: 48,
         walls: [-1000],
         wallImages: [IMAGES.brickWall],
+
         update: function(dt) {
             var wallEnd = this.walls[this.walls.length - 1] +
                 TILE_W;
@@ -181,6 +204,7 @@ window.addEventListener('load', function() {
                 this.walls.shift();
             }
         },
+
         renderWall: function(ctx, x) {
             for (var i = 1; i < SCENE_H - 1; i += 1) {
                 ctx.drawImage(this.wallImages[randomInt(this.wallImages
@@ -188,11 +212,13 @@ window.addEventListener('load', function() {
                     TILE_W * i - OFFSET_Y);
             }
         },
+
         render: function(ctx, cam) {
             for (var i = 0; i < this.walls.length; i += 1) {
                 this.renderWall(ctx, this.walls[i]);
             }
         },
+
         collision: function(guy) {
             var le = guy.x - 5;
             var ri = guy.x + 5;
@@ -217,6 +243,7 @@ window.addEventListener('load', function() {
 
     var effect = {
         list: [],
+
         glitch: function(ctx, img, x, y) {
             var w = img.width;
             var h = img.height;
@@ -232,6 +259,7 @@ window.addEventListener('load', function() {
                     x, y + dy, dx, spliceH);
             }
         },
+
         add: function(img, x, y) {
             var canvas = document.createElement('canvas');
             canvas.width = img.width;
@@ -245,6 +273,7 @@ window.addEventListener('load', function() {
                 ctx: ctx
             });
         },
+
         update: function(cam) {
             while (this.list.length != 0 &&
                 this.list[0].x + TILE_W / 2 < cam.x - CANVAS_W / 2) {
@@ -259,6 +288,7 @@ window.addEventListener('load', function() {
                 }
             }
         },
+
         render: function(ctx, cam) {
             for (var i = 0; i < this.list.length; i += 1) {
                 var inst = this.list[i];
@@ -271,26 +301,40 @@ window.addEventListener('load', function() {
         }
     }
 
+    /* #menu */
     var menu = {
-        w: 3.3 * TILE_W,
-        h: 2.3 * TILE_W,
+        w: 2 * TILE_W,
+        h: CANVAS_H - 2,
+        highImg: null,
+        restartImg: null,
+
+        init: function() {
+            this.highImg = document.getElementById('highscore');
+            this.restartImg = document.getElementById('restart');
+        },
+
         render: function(fgCtx, bgCtx) {
-            fgCtx.fillStyle = 'rgba(10, 20, 30, 0.5)';
-            fgCtx.fillRect(CANVAS_W / 2 - this.w / 2,
-                CANVAS_H / 2 - this.h / 2, this.w, this.h);
-            bgCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            var ctx = fgCtx;
+            ctx.drawImage(this.highImg, TILE_W / 2, TILE_W / 4 - 1);
+            pixelFont.write(ctx, score.highscore, TILE_W, TILE_W / 2);
+            ctx.drawImage(this.restartImg,
+                CANVAS_W - TILE_W, TILE_W / 4 - 1);
         }
     };
 
+    menu.init();
+
     var audio = {
         MUTATIONS: 3,
+        audios: {},
+
         settings: {
             'jump': [0, 0.11, 0.14, 0.20, 0.26, 0.34, 0.085, 0.21, 0,
                 0.55, 0.51, -0.34, 0.26, 0.13, 0.01, 0.19, -0.10,
                 0.17, 0.88, -0.15, 0.20, , -0.28, 0.35
             ]
         },
-        audios: {},
+
         init: function() {
             for (var audioName in this.settings) {
                 var settings = this.settings[audioName];
@@ -303,6 +347,7 @@ window.addEventListener('load', function() {
                 }
             }
         },
+
         mutate: function(settings) {
             for (var i = 0; i < settings.length; i += 1) {
                 if (Math.random() < 0.5 && settings[i]) {
@@ -311,6 +356,7 @@ window.addEventListener('load', function() {
             }
             return settings;
         },
+
         play: function(audioName) {
             this.audios[audioName][randomInt(this.MUTATIONS)].play();
         }
@@ -322,6 +368,7 @@ window.addEventListener('load', function() {
         CHAR_W: 3,
         CHAR_H: 5,
         chars: {},
+
         init: function() {
             var digits = document.getElementById('digits');
             for (var i = 0; i < 10; i += 1) {
@@ -335,6 +382,7 @@ window.addEventListener('load', function() {
                 this.chars[i] = canvas;
             }
         },
+
         write: function(ctx, text, x, y) {
             text = text.toString();
             x -= text.length * (this.CHAR_W + 1) / 2 - 0.5;
@@ -348,25 +396,67 @@ window.addEventListener('load', function() {
 
     pixelFont.init();
 
+    /* #score */
     var score = {
+        LS_ITEM: 'glitcher-highscore',
         startTime: 0,
-        dispScore: -1,
+        curScore: 0,
+        dispScore: null,
+        highscore: 0,
+        new: false,
+        newHighImg: null,
 
         init: function() {
+            /* load highscore from localStorage */
+            this.highscore = window.localStorage.getItem(this.LS_ITEM);
+
+            /* create 'new highscore' img */
+            var newImg = document.getElementById('new');
+            var highImg = document.getElementById('highscore');
+            var canvas = document.createElement('canvas');
+            canvas.width = newImg.width + 2 + highImg.width;
+            canvas.height = Math.max(newImg.height, highImg.height);
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(newImg, 0, 0);
+            ctx.drawImage(highImg, newImg.width + 2, 0);
+            this.newHighImg = canvas;
+        },
+
+        reset: function() {
             this.startTime = performance.now();
+            this.curScore = 0;
+            this.dispScore = null;
+            this.new = false;
+        },
+
+        update: function() {
+            this.curScore = Math.floor(
+                (performance.now() - this.startTime) / 1000);
+
+            if (this.curScore > this.highscore) {
+                this.new = true;
+                this.highscore = this.curScore;
+                window.localStorage.setItem(this.LS_ITEM, this.highscore);
+            }
         },
 
         render: function(ctx) {
-            var curScore = Math.floor((performance.now() -
-                this.startTime) / 1000);
-            if (curScore != this.dispScore) {
+            if (this.curScore !== this.dispScore) {
                 ctx.clearRect(0, 0, CANVAS_W, TILE_W);
-                this.dispScore = curScore;
-                pixelFont.write(ctx, curScore, CANVAS_W / 2,
-                    TILE_W / 2);
+
+                this.dispScore = this.curScore;
+                pixelFont.write(ctx, this.curScore, CANVAS_W / 2, TILE_W / 2);
+
+                if (this.new) {
+                    ctx.drawImage(this.newHighImg,
+                        CANVAS_W / 2 - this.newHighImg.width / 2,
+                        TILE_W / 4 - 1);
+                }
             }
         }
     };
+
+    score.init();
 
     document.addEventListener('touchstart', function(e) {
         guy.jump();
@@ -385,8 +475,6 @@ window.addEventListener('load', function() {
     function randomInt(max) {
         return Math.floor(Math.random() * max);
     }
-
-    scene.init();
 
     var preTime;
 
@@ -408,6 +496,7 @@ window.addEventListener('load', function() {
         scene.update(cam);
         effect.update(cam);
         obstacles.update(dt);
+        score.update();
 
         var ctx = ctxs.ui;
         score.render(ctx);
@@ -419,12 +508,12 @@ window.addEventListener('load', function() {
         guy.render(ctx, cam);
 
         if (obstacles.collision(guy)) {
-            menu.render(ctxs.ui, ctxs.main);
+            menu.render(ctxs.menu, ctxs.main);
         } else {
             requestAnimationFrame(mainLoop);
         }
     }
 
-    score.init();
+    score.reset();
     requestAnimationFrame(mainLoop);
 });
