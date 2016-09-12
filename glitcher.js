@@ -495,6 +495,31 @@ window.addEventListener('load', function() {
         }
     };
 
+    /* #fullscreen */
+    var fullscreen = {
+        img: document.getElementById('fullscreen'),
+        x: 0,
+        y: 0,
+
+        init: function() {
+            this.x = menu.restart_x;
+            this.y = CANVAS_H - menu.restart_y;
+        },
+
+        reset: function() {
+            var ctx = ctxs.ui;
+            ctx.drawImage(this.img,
+                this.x - this.img.width / 2,
+                this.y - this.img.height / 2);
+        },
+
+        toggle: function() {
+            if (screenfull.enabled) {
+                screenfull.toggle();
+            }
+        }
+    };
+
     function dist(x0, y0, x1, y1) {
         var dx = x0 - x1;
         var dy = y0 - y1;
@@ -510,9 +535,10 @@ window.addEventListener('load', function() {
     }
 
     function listener(x, y) {
-        console.log(x, y);
-        console.log(menu.restart_x, menu.restart_y);
-        if (gameover) {
+        if (dist(x, y, fullscreen.x, fullscreen.y) <
+            fullscreen.img.width / 2) {
+            fullscreen.toggle();
+        } else if (gameover) {
             if (dist(x, y, menu.restart_x, menu.restart_y) <
                 menu.restartImg.width / 2) {
                 restart();
@@ -523,21 +549,24 @@ window.addEventListener('load', function() {
     }
 
     document.addEventListener('mousedown', function(e) {
+        e.preventDefault();
         var canvas = ctxs.main.canvas;
         var x = e.pageX - canvas.offsetLeft;
         var y = e.pageY - canvas.offsetTop;
-        listener(x, y);
+        listener(x / zoom, y / zoom);
     });
 
     document.addEventListener('touchstart', function(e) {
+        e.preventDefault();
         var canvas = ctxs.main.canvas;
         var x = e.targetTouches[0].pageX - canvas.offsetLeft;
         var y = e.targetTouches[0].pageY - canvas.offsetTop;
-        listener(x, y);
+        listener(x / zoom, y / zoom);
     });
 
     document.addEventListener('keydown', function(e) {
         if (e.code == 'Space') {
+            e.preventDefault();
             listener(0, 0);
         }
     });
@@ -583,6 +612,7 @@ window.addEventListener('load', function() {
         effect.init();
         obstacles.init();
         pixelFont.init();
+        fullscreen.init();
     }
 
     function reset() {
@@ -595,6 +625,7 @@ window.addEventListener('load', function() {
         effect.reset();
         obstacles.reset();
         pixelFont.reset();
+        fullscreen.reset();
     }
 
     var preTime = null;
