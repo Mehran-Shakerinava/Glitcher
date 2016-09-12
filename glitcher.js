@@ -40,6 +40,7 @@ window.addEventListener('load', function() {
     IMAGES.darkBlueGranite = document.getElementById('dark-blue-granite');
     IMAGES.darkBlueGranite2 = document.getElementById('dark-blue-granite-2');
 
+    /* #guy */
     var guy = {
         x: 0,
         y: -TILE_W / 2,
@@ -65,6 +66,11 @@ window.addEventListener('load', function() {
                     TILE_W, TILE_W, 0, 0, TILE_W, TILE_W);
                 this.anim.frames.push(canvas);
             }
+        },
+
+        reset: function() {
+            this.x = 0;
+            this.y = -TILE_W / 2;
         },
 
         render: function(ctx, cam) {
@@ -94,32 +100,42 @@ window.addEventListener('load', function() {
         }
     };
 
-    guy.init();
-
+    /* #cam */
     var cam = {
-        AHEAD: 64,
-        A: 64,
-        v: 32,
-        x: CANVAS_W / 2 + TILE_W / 2,
-        y: TILE_W - CANVAS_H / 2 - OFFSET_Y,
+        DX: 64,
+        ACC: 64,
+        DEC: 128,
+
+        v: 0,
+        x: 0,
+        y: 0,
+
+        init: function() {},
+
+        reset: function() {
+            this.v = 32;
+            this.x = CANVAS_W / 2 + TILE_W / 2;
+            this.y = TILE_W - CANVAS_H / 2 - OFFSET_Y;
+        },
 
         update: function(dt, guy) {
             this.x += this.v * dt;
 
             var v = this.v - guy.V;
-            var x = guy.x + this.AHEAD - this.x;
-            var dx = sign(v) * 0.5 * v * v / this.A;
+            var x = guy.x + this.DX - this.x;
+            var dx = sign(v) * 0.5 * v * v / this.DEC;
 
             if (x * dx >= 0 && Math.abs(dx) <= Math.abs(x)) {
                 /* accelerate */
-                this.v += sign(v) * dt * this.A;
+                this.v += sign(v) * dt * this.ACC;
             } else {
                 /* decelerate */
-                this.v -= sign(v) * dt * this.A;
+                this.v -= sign(v) * dt * this.DEC;
             }
         }
     };
 
+    /* #scene */
     var scene = {
         ceilImages: [IMAGES.darkBlueGranite2],
         bgImages: [IMAGES.fossils],
@@ -136,6 +152,10 @@ window.addEventListener('load', function() {
             for (var i = 0; i < SCENE_W; i += 1) {
                 this.genTiles();
             }
+        },
+
+        reset: function() {
+            this.x = 0;
         },
 
         genTiles: function() {
@@ -181,17 +201,22 @@ window.addEventListener('load', function() {
         }
     };
 
-    scene.init();
-
+    /* #obstacles */
     var obstacles = {
         PROB: 1,
         DIST: 48,
-        walls: [-1000],
+
+        walls: null,
         wallImages: [IMAGES.brickWall],
 
+        init: function() {},
+
+        reset: function() {
+            this.walls = [-1234];
+        },
+
         update: function(dt) {
-            var wallEnd = this.walls[this.walls.length - 1] +
-                TILE_W;
+            var wallEnd = this.walls[this.walls.length - 1] + TILE_W;
             var camEnd = cam.x + CANVAS_W / 2;
             var camBegin = cam.x - CANVAS_W / 2;
             /* TODO: check prev walls and affect random */
@@ -207,8 +232,9 @@ window.addEventListener('load', function() {
 
         renderWall: function(ctx, x) {
             for (var i = 1; i < SCENE_H - 1; i += 1) {
-                ctx.drawImage(this.wallImages[randomInt(this.wallImages
-                        .length)], x - cam.x + CANVAS_W / 2,
+                ctx.drawImage(this.wallImages[
+                        randomInt(this.wallImages.length)],
+                    x - cam.x + CANVAS_W / 2,
                     TILE_W * i - OFFSET_Y);
             }
         },
@@ -241,8 +267,15 @@ window.addEventListener('load', function() {
         }
     };
 
+    /* #effect */
     var effect = {
-        list: [],
+        list: null,
+
+        init: function() {},
+
+        reset: function() {
+            this.list = [];
+        },
 
         glitch: function(ctx, img, x, y) {
             var w = img.width;
@@ -303,8 +336,6 @@ window.addEventListener('load', function() {
 
     /* #menu */
     var menu = {
-        w: 2 * TILE_W,
-        h: CANVAS_H - 2,
         highImg: null,
         restartImg: null,
 
@@ -313,6 +344,9 @@ window.addEventListener('load', function() {
             this.restartImg = document.getElementById('restart');
         },
 
+        reset: function() {},
+
+        /* TODO: glitch bgCtx */
         render: function(fgCtx, bgCtx) {
             var ctx = fgCtx;
             ctx.drawImage(this.highImg, TILE_W / 2, TILE_W / 4 - 1);
@@ -322,10 +356,9 @@ window.addEventListener('load', function() {
         }
     };
 
-    menu.init();
-
+    /* #audio */
     var audio = {
-        MUTATIONS: 3,
+        MUTATIONS: 5,
         audios: {},
 
         settings: {
@@ -348,10 +381,12 @@ window.addEventListener('load', function() {
             }
         },
 
+        reset: function() {},
+
         mutate: function(settings) {
             for (var i = 0; i < settings.length; i += 1) {
                 if (Math.random() < 0.5 && settings[i]) {
-                    settings[i] += Math.random() * 0.1 - 0.05;
+                    settings[i] += Math.random() * 0.1 / 3 - 0.05 / 3;
                 }
             }
             return settings;
@@ -362,8 +397,7 @@ window.addEventListener('load', function() {
         }
     };
 
-    audio.init();
-
+    /* #pixelFont */
     var pixelFont = {
         CHAR_W: 3,
         CHAR_H: 5,
@@ -383,6 +417,8 @@ window.addEventListener('load', function() {
             }
         },
 
+        reset: function() {},
+
         write: function(ctx, text, x, y) {
             text = text.toString();
             x -= text.length * (this.CHAR_W + 1) / 2 - 0.5;
@@ -393,8 +429,6 @@ window.addEventListener('load', function() {
             }
         }
     };
-
-    pixelFont.init();
 
     /* #score */
     var score = {
@@ -456,8 +490,6 @@ window.addEventListener('load', function() {
         }
     };
 
-    score.init();
-
     document.addEventListener('touchstart', function(e) {
         guy.jump();
     });
@@ -474,6 +506,30 @@ window.addEventListener('load', function() {
 
     function randomInt(max) {
         return Math.floor(Math.random() * max);
+    }
+
+    function init() {
+        guy.init();
+        cam.init();
+        menu.init();
+        scene.init();
+        score.init();
+        audio.init();
+        effect.init();
+        obstacles.init();
+        pixelFont.init();
+    }
+
+    function reset() {
+        guy.reset();
+        cam.reset();
+        menu.reset();
+        scene.reset();
+        score.reset();
+        audio.reset();
+        effect.reset();
+        obstacles.reset();
+        pixelFont.reset();
     }
 
     var preTime;
@@ -514,6 +570,7 @@ window.addEventListener('load', function() {
         }
     }
 
-    score.reset();
+    init();
+    reset();
     requestAnimationFrame(mainLoop);
 });
