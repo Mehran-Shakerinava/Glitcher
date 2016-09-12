@@ -103,8 +103,8 @@ window.addEventListener('load', function() {
     /* #cam */
     var cam = {
         DX: 64,
-        ACC: 64,
-        DEC: 128,
+        ACC: 128,
+        DEC: 256,
 
         v: 0,
         x: 0,
@@ -113,7 +113,7 @@ window.addEventListener('load', function() {
         init: function() {},
 
         reset: function() {
-            this.v = 32;
+            this.v = -32;
             this.x = CANVAS_W / 2 + TILE_W / 2;
             this.y = TILE_W - CANVAS_H / 2 - OFFSET_Y;
         },
@@ -336,12 +336,16 @@ window.addEventListener('load', function() {
 
     /* #menu */
     var menu = {
+        restart_x: 0,
+        restart_y: 0,
         highImg: null,
         restartImg: null,
 
         init: function() {
             this.highImg = document.getElementById('highscore');
             this.restartImg = document.getElementById('restart');
+            this.restart_x = CANVAS_W - TILE_W + this.restartImg.width / 2;
+            this.restart_y = TILE_W / 4 - 1 + this.restartImg.height / 2;
         },
 
         reset: function() {},
@@ -352,7 +356,8 @@ window.addEventListener('load', function() {
             ctx.drawImage(this.highImg, TILE_W / 2, TILE_W / 4 - 1);
             pixelFont.write(ctx, score.highscore, TILE_W, TILE_W / 2);
             ctx.drawImage(this.restartImg,
-                CANVAS_W - TILE_W, TILE_W / 4 - 1);
+                this.restart_x - this.restartImg.width / 2,
+                this.restart_y - this.restartImg.height / 2);
         }
     };
 
@@ -490,15 +495,75 @@ window.addEventListener('load', function() {
         }
     };
 
+    function dist(x0, y0, x1, y1) {
+        var dx = x0 - x1;
+        var dy = y0 - y1;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function restart() {
+        gameover = false;
+        requestAnimationFrame(mainLoop);
+        for (var x in ctxs) {
+            clearCanvas(ctxs[x]);
+        }
+    }
+
+    function listener(x, y) {
+        console.log(x, y);
+        console.log(menu.restart_x, menu.restart_y);
+        if (gameover) {
+            if (dist(x, y, menu.restart_x, menu.restart_y) <
+                menu.restartImg.width / 2) {
+                restart();
+            }
+        } else {
+            guy.jump();
+        }
+    }
+
+    document.addEventListener('mousedown', function(e) {
+        var canvas = ctxs.main.canvas;
+        var x = e.pageX - canvas.offsetLeft;
+        var y = e.pageY - canvas.offsetTop;
+        listener(x, y);
+    });
+
     document.addEventListener('touchstart', function(e) {
-        guy.jump();
+        var canvas = ctxs.main.canvas;
+        var x = e.targetTouches[0].pageX - canvas.offsetLeft;
+        var y = e.targetTouches[0].pageY - canvas.offsetTop;
+        listener(x, y);
     });
 
     document.addEventListener('keydown', function(e) {
         if (e.code == 'Space') {
-            guy.jump();
+            listener(0, 0);
         }
     });
+
+    var zoom = 1;
+
+    function resize() {
+        var CANVAS_RATIO = CANVAS_W / CANVAS_H;
+        var windowRatio = window.innerWidth / window.innerHeight;
+
+        if (CANVAS_RATIO > windowRatio) {
+            zoom = window.innerWidth / CANVAS_W;
+        } else {
+            zoom = window.innerHeight / CANVAS_H;
+        }
+
+        for (var x in ctxs) {
+            var canvas = ctxs[x].canvas;
+            canvas.style.width = CANVAS_W * zoom;
+            canvas.style.height = CANVAS_H * zoom;
+        }
+    }
+
+    window.addEventListener('resize', resize);
+
+    resize();
 
     function sign(x) {
         return (x < 0 ? -1 : 1);
@@ -532,11 +597,13 @@ window.addEventListener('load', function() {
         pixelFont.reset();
     }
 
-    var preTime;
+    var preTime = null;
+    var gameover = false;
 
     function mainLoop(timestamp) {
         if (!preTime) {
             preTime = timestamp;
+            score.startTime = timestamp;
         }
 
         var dt = timestamp - preTime;
@@ -564,6 +631,9 @@ window.addEventListener('load', function() {
         guy.render(ctx, cam);
 
         if (obstacles.collision(guy)) {
+            gameover = true;
+            preTime = null;
+            reset();
             menu.render(ctxs.menu, ctxs.main);
         } else {
             requestAnimationFrame(mainLoop);
