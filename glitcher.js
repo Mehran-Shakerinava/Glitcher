@@ -42,19 +42,22 @@ window.addEventListener('load', function() {
 
     /* #guy */
     var guy = {
-        x: 0,
-        y: -TILE_W / 2,
+        W: 10,
         V: 64,
         J: 54,
 
+        x: 0,
+        y: 0,
+
         anim: {
-            /* should correlate with speed */
-            FPS: 64 / 3,
+            FPS: 0,
             frames: [],
             t: 0
         },
 
         init: function() {
+            this.anim.FPS = this.V / 3;
+            
             var spritesheet = document.getElementById('dark-devil');
             var len = spritesheet.width / TILE_W;
             for (var i = 0; i < len; i += 1) {
@@ -95,6 +98,7 @@ window.addEventListener('load', function() {
             effect.add(img, this.x, this.y);
 
             this.x += this.J;
+            this.x = Math.min(this.x, cam.x + CANVAS_W / 2 - 5);
 
             audio.play('jump');
         }
