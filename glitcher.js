@@ -56,7 +56,7 @@ window.addEventListener('load', function() {
         },
 
         init: function() {
-            this.anim.FPS = this.V / 3;
+            this.anim.FPS = this.V / 5;
 
             var spritesheet = document.getElementById('dark-devil');
             var len = spritesheet.width / TILE_W;
@@ -349,10 +349,12 @@ window.addEventListener('load', function() {
         restart_y: 0,
         highImg: null,
         restartImg: null,
+        gameoverImg: null,
 
         init: function() {
             this.highImg = document.getElementById('highscore');
             this.restartImg = document.getElementById('restart');
+            this.gameoverImg = document.getElementById('gameover');
             this.restart_x = CANVAS_W - TILE_W + this.restartImg.width / 2;
             this.restart_y = TILE_W / 4 - 1 + this.restartImg.height / 2;
         },
@@ -367,6 +369,9 @@ window.addEventListener('load', function() {
             ctx.drawImage(this.restartImg,
                 this.restart_x - this.restartImg.width / 2,
                 this.restart_y - this.restartImg.height / 2);
+            ctx.drawImage(this.gameoverImg,
+                CANVAS_W / 2 - this.gameoverImg.width / 2,
+                CANVAS_H / 2 - this.gameoverImg.height / 2);
         }
     };
 
@@ -536,11 +541,13 @@ window.addEventListener('load', function() {
     }
 
     function restart() {
+        preTime = null;
         gameover = false;
-        requestAnimationFrame(mainLoop);
         for (var x in ctxs) {
             clearCanvas(ctxs[x]);
         }
+        reset();
+        requestAnimationFrame(mainLoop);
     }
 
     function listener(x, y) {
@@ -672,8 +679,6 @@ window.addEventListener('load', function() {
 
         if (obstacles.collision(guy)) {
             gameover = true;
-            preTime = null;
-            reset();
             menu.render(ctxs.menu, ctxs.main);
         } else {
             requestAnimationFrame(mainLoop);
