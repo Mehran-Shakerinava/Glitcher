@@ -57,7 +57,7 @@ window.addEventListener('load', function() {
 
         init: function() {
             this.anim.FPS = this.V / 3;
-            
+
             var spritesheet = document.getElementById('dark-devil');
             var len = spritesheet.width / TILE_W;
             for (var i = 0; i < len; i += 1) {
@@ -108,7 +108,7 @@ window.addEventListener('load', function() {
     var cam = {
         DX: 64,
         ACC: 128,
-        DEC: 256,
+        DEC: 128,
 
         v: 0,
         x: 0,
@@ -117,7 +117,7 @@ window.addEventListener('load', function() {
         init: function() {},
 
         reset: function() {
-            this.v = -32;
+            this.v = 0;
             this.x = CANVAS_W / 2 + TILE_W / 2;
             this.y = TILE_W - CANVAS_H / 2 - OFFSET_Y;
         },
@@ -207,9 +207,10 @@ window.addEventListener('load', function() {
 
     /* #obstacles */
     var obstacles = {
-        PROB: 1,
-        DIST: 48,
+        DIST: 64,
+        DELTA: 48,
 
+        d: 0,
         walls: null,
         wallImages: [IMAGES.brickWall],
 
@@ -217,17 +218,21 @@ window.addEventListener('load', function() {
 
         reset: function() {
             this.walls = [-1234];
+            this.d = 0;
         },
 
         update: function(dt) {
             var wallEnd = this.walls[this.walls.length - 1] + TILE_W;
             var camEnd = cam.x + CANVAS_W / 2;
             var camBegin = cam.x - CANVAS_W / 2;
-            /* TODO: check prev walls and affect random */
-            if (wallEnd + this.DIST < camEnd &&
-                Math.random() < this.PROB * dt) {
+
+            /* push wall */
+            if (wallEnd + this.d <= camEnd) {
                 this.walls.push(Math.ceil(camEnd));
+                this.d = (Math.random() - 0.5) * this.DELTA + this.DIST;
             }
+
+            /* pop wall */
             while (this.walls.length > 1 &&
                 this.walls[0] + 32 < camBegin) {
                 this.walls.shift();
