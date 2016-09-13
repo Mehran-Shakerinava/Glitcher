@@ -27,6 +27,21 @@ window.addEventListener('load', function() {
         ctx.restore();
     }
 
+    function createTiles(img) {
+        var tiles = [];
+        var len = img.width / TILE_W;
+        for (var i = 0; i < len; i += 1) {
+            var canvas = document.createElement('canvas');
+            canvas.width = TILE_W;
+            canvas.height = TILE_W;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, i * TILE_W, 0,
+                TILE_W, TILE_W, 0, 0, TILE_W, TILE_W);
+            tiles.push(canvas);
+        }
+        return tiles;
+    }
+
     addCanvas('main', 1);
     addCanvas('menu', 2)
     addCanvas('ui', 3);
@@ -37,8 +52,6 @@ window.addEventListener('load', function() {
     var IMAGES = {};
     IMAGES.fossils = document.getElementById('fossils');
     IMAGES.brickWall = document.getElementById('brick-wall');
-    IMAGES.darkBlueGranite = document.getElementById('dark-blue-granite');
-    IMAGES.darkBlueGranite2 = document.getElementById('dark-blue-granite-2');
 
     /* #guy */
     var guy = {
@@ -50,25 +63,16 @@ window.addEventListener('load', function() {
         y: 0,
 
         anim: {
+            t: 0,
             FPS: 0,
-            frames: [],
-            t: 0
+            frames: null
         },
 
         init: function() {
             this.anim.FPS = this.V / 5;
 
-            var spritesheet = document.getElementById('dark-devil');
-            var len = spritesheet.width / TILE_W;
-            for (var i = 0; i < len; i += 1) {
-                var canvas = document.createElement('canvas');
-                canvas.width = TILE_W;
-                canvas.height = TILE_W;
-                var ctx = canvas.getContext('2d');
-                ctx.drawImage(spritesheet, i * TILE_W, 0,
-                    TILE_W, TILE_W, 0, 0, TILE_W, TILE_W);
-                this.anim.frames.push(canvas);
-            }
+            var spritesheet = document.getElementById('guy');
+            this.anim.frames = createTiles(spritesheet);
         },
 
         reset: function() {
@@ -141,15 +145,17 @@ window.addEventListener('load', function() {
 
     /* #scene */
     var scene = {
-        ceilImages: [IMAGES.darkBlueGranite2],
+        ceilImages: null,
         bgImages: [IMAGES.fossils],
-        floorImages: [IMAGES.darkBlueGranite],
+        floorImages: null,
         x: 0,
         ceil: [],
         bg: [],
         floor: [],
 
         init: function() {
+            this.ceilImages = createTiles(document.getElementById('ceil'));
+            this.floorImages = createTiles(document.getElementById('floor'));
             for (var i = 0; i < SCENE_H - 2; i += 1) {
                 this.bg.push([]);
             }
