@@ -387,9 +387,12 @@ window.addEventListener('load', function() {
         audios: {},
 
         settings: {
-            'jump': [0, 0.11, 0.14, 0.20, 0.26, 0.34, 0.085, 0.21, 0,
-                0.55, 0.51, -0.34, 0.26, 0.13, 0.01, 0.19, -0.10,
-                0.17, 0.88, -0.15, 0.20, , -0.28, 0.35
+            'jump': [0, 0.11, 0.14, 0.2, 0.26, 0.34, 0.085, 0.21, ,
+                0.55, 0.51, -0.34, 0.26, 0.13, 0.01, 0.19, -0.1,
+                0.17, 0.88, -0.15, 0.2, , -0.28, 0.15
+            ],
+            'dead': [0, , 0.01, , 0.20, 0.36, , -0.43, , , , , ,
+                0.46, , , , , 1, , , 0.27, , 0.55
             ]
         },
 
@@ -418,6 +421,7 @@ window.addEventListener('load', function() {
         },
 
         play: function(audioName) {
+            console.log('play audio: ' + audioName);
             this.audios[audioName][randomInt(this.MUTATIONS)].play();
         }
     };
@@ -685,6 +689,7 @@ window.addEventListener('load', function() {
 
         if (obstacles.collision(guy)) {
             gameover = true;
+            audio.play('dead');
             menu.render(ctxs.menu, ctxs.main);
         } else {
             requestAnimationFrame(mainLoop);
